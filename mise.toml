@@ -1,0 +1,38 @@
+[tools]
+node = "24.21.0"
+
+[tasks.dev]
+description = "Start the React Router development server with hot reload on port 3027"
+run = "npm exec -- react-router dev --port 3027"
+
+[tasks.lint]
+description = "Run formatting, linting, and TypeScript checks"
+run = "npm exec -- biome check . && npm exec -- tsc --noEmit"
+
+[tasks.build]
+description = "Build the production application"
+run = "npm exec -- react-router build"
+
+[tasks.test]
+description = "Run unit and end-to-end tests"
+run = "npm exec -- vitest run && npm exec -- react-router build && npm exec -- playwright test"
+
+[tasks."db:migrate"]
+description = "Apply migrations and bootstrap the superuser"
+run = "npm exec -- tsx scripts/setup-db.ts"
+
+[tasks."db:backup"]
+description = "Write a consistent timestamped SQLite backup"
+run = "docker compose exec app node_modules/.bin/tsx scripts/backup.ts"
+
+[tasks."container:build"]
+description = "Build the Docker image"
+run = "docker build --tag burdocks:local ."
+
+[tasks."pwa:assets"]
+description = "Generate PWA icons from public/icon-source.png"
+run = "npm exec -- pwa-assets-generator icon-source.png --preset minimal --root public"
+
+[tasks."hooks:install"]
+description = "Install the project's Husky hooks"
+run = "npm exec -- husky"
