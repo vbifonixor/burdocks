@@ -1,4 +1,5 @@
 [tools]
+gh = "latest"
 node = "24.21.0"
 
 [tasks.dev]
@@ -7,7 +8,7 @@ run = "npm exec -- react-router dev --port 3027"
 
 [tasks.lint]
 description = "Run formatting, linting, and TypeScript checks"
-run = "npm exec -- biome check . && npm exec -- tsc --noEmit"
+run = "npm exec -- biome check . && npm exec -- react-router typegen && npm exec -- tsc --noEmit"
 
 [tasks.build]
 description = "Build the production application"
