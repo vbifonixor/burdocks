@@ -2,6 +2,10 @@ FROM node:24.21.0-bookworm-slim AS build
 
 WORKDIR /app
 
+RUN apt-get update \
+  && apt-get install --no-install-recommends --yes python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
