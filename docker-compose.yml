@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in mise.local.toml}
+      BACKUP_DIRECTORY: /data
+      HOSTNAME: ${HOSTNAME:-http://localhost:3027}
+      PORT: ${PORT:-3027}
+      SU_EMAIL: ${SU_EMAIL:?Set SU_EMAIL in mise.local.toml}
+      SU_PASSWORD: ${SU_PASSWORD:?Set SU_PASSWORD in mise.local.toml}
+    ports:
+      - "${PORT:-3027}:${PORT:-3027}"
+    volumes:
+      - data:/data
+
+volumes:
+  data:
