@@ -7,7 +7,7 @@
     "node": "24.21.0"
   },
   "lint-staged": {
-    "*.{css,html,js,json,jsx,md,ts,tsx,yml,yaml}": "biome check --write"
+    "*.{css,js,json,jsx,ts,tsx}": "biome check --write"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.6",

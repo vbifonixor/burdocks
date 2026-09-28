@@ -36,6 +36,48 @@ SU_PASSWORD=<strong-bootstrap-password>
 
 `HOSTNAME` must be the exact public HTTPS origin. Never commit the `.env` file.
 
+## First Deployment Handoff
+
+Before deployment, provide the agent with:
+
+- The immutable image SHA from a successful `main` workflow run.
+- The public `HOSTNAME`, including `https://` and no trailing slash.
+- A long random `AUTH_SECRET`, for example from `openssl rand -base64 48`.
+- The bootstrap administrator's `SU_EMAIL` and strong `SU_PASSWORD`.
+- Docker Engine, the Docker Compose plugin, a working HTTPS reverse proxy, and DNS for `HOSTNAME` on the VDS.
+- A GHCR credential that can pull the private `ghcr.io/vbifonixor/burdocks` package. Use it only with `docker login ghcr.io`; do not add it to `.env`.
+
+For a first deployment, run as a host administrator:
+
+```sh
+install -d -m 0750 /opt/burdocks
+install -d -o 1000 -g 1000 -m 0750 /var/lib/burdocks
+cd /opt/burdocks
+docker login ghcr.io
+```
+
+Write `compose.yml` and the mode `0600` `.env` shown above, replacing every placeholder. The container runs as the image's `node` user (UID/GID `1000`), so `/var/lib/burdocks` must be writable by that user. Then start and verify the exact image:
+
+```sh
+docker compose pull
+docker compose up -d
+curl --fail http://127.0.0.1:3027/ping
+```
+
+On the first successful start, the application migrates SQLite and creates the configured bootstrap administrator only when that email does not already exist. Sign in through `HOSTNAME` and confirm the expected account can access `/admin` before considering the deployment complete.
+
+## Backups
+
+The running container can produce a SQLite-consistent, timestamped backup without stopping the service:
+
+```sh
+cd /opt/burdocks
+docker compose exec app node_modules/.bin/tsx scripts/backup.ts
+ls -lh /var/lib/burdocks
+```
+
+The backup is written beside `db.sqlite` in `/var/lib/burdocks` on the host. Copy that directory to independent storage on a regular schedule and verify restoration in a non-production environment. Keep the container running while invoking the backup command; it uses SQLite's backup API so the database and its WAL state are captured consistently.
+
 ## Ansible Contract
 
 The infrastructure playbooks should make the VDS ready to run the Compose file above.
