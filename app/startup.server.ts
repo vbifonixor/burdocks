@@ -18,16 +18,12 @@ export async function bootstrapSuperuser() {
     return;
   }
 
-  await auth.api.signUpEmail({
+  await auth.api.createUser({
     body: {
       email: env.superuserEmail,
       name: "Burdocks admin",
       password: env.superuserPassword,
+      role: "admin",
     },
   });
-
-  await db
-    .update(user)
-    .set({ role: "admin" })
-    .where(eq(user.email, env.superuserEmail));
 }

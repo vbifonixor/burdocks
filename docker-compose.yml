@@ -11,4 +11,7 @@ services:
     ports:
       - "${PORT:-3027}:${PORT:-3027}"
     volumes:
-      - ./data:/data
+      - data:/data
+
+volumes:
+  data:

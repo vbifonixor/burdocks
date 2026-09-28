@@ -10,6 +10,20 @@ test("users manage only their own grocery items", async ({ app, page }) => {
   const adminPage = new AdminPage(page);
 
   await signInPage.open(app.url);
+  const signUpStatus = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/sign-up/email", {
+      body: JSON.stringify({
+        email: "public-signup@example.com",
+        name: "Public signup",
+        password: "public-signup-password",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    return response.status;
+  });
+  expect(signUpStatus).toBe(400);
+
   await signInPage.signIn(app.adminEmail, app.adminPassword);
   await expect(
     page.getByRole("heading", { name: "Grocery list" }),
@@ -36,6 +50,9 @@ test("users manage only their own grocery items", async ({ app, page }) => {
   await groceryPage.signOut();
 
   await signInPage.signIn(playerEmail, "playwright-player-password");
+  await expect(
+    page.getByRole("heading", { name: "Grocery list" }),
+  ).toBeVisible();
   await expect(groceryPage.item("Milk")).toHaveCount(0);
   const deletionStatus = await page.evaluate(async (itemId) => {
     const response = await fetch(`/api/grocery/${itemId}`, {
@@ -44,7 +61,7 @@ test("users manage only their own grocery items", async ({ app, page }) => {
     });
     return response.status;
   }, milkId);
-  expect(deletionStatus).toBe(401);
+  expect(deletionStatus).toBe(404);
   await groceryPage.signOut();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });

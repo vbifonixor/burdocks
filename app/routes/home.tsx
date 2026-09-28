@@ -35,57 +35,73 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = formData.get("intent");
   const itemId = formData.get("itemId");
 
-  if (intent === "create") {
-    await db.insert(groceryItems).values({
-      id: crypto.randomUUID(),
-      text: itemText(formData.get("text")),
-      userId: user.id,
-    });
-  }
+  switch (intent) {
+    case "create":
+      await db.insert(groceryItems).values({
+        id: crypto.randomUUID(),
+        text: itemText(formData.get("text")),
+        userId: user.id,
+      });
+      break;
+    case "toggle": {
+      if (typeof itemId !== "string") {
+        throw new Response("Item ID is required", { status: 400 });
+      }
 
-  if (typeof itemId === "string" && intent === "toggle") {
-    const [item] = await db
-      .select({ completed: groceryItems.completed })
-      .from(groceryItems)
-      .where(
-        and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
-      );
+      const [item] = await db
+        .select({ completed: groceryItems.completed })
+        .from(groceryItems)
+        .where(
+          and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
+        );
 
-    if (!item) {
-      throw new Response("Not found", { status: 404 });
+      if (!item) {
+        throw new Response("Not found", { status: 404 });
+      }
+
+      await db
+        .update(groceryItems)
+        .set({ completed: !item.completed, updatedAt: new Date() })
+        .where(
+          and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
+        );
+      break;
     }
+    case "delete": {
+      if (typeof itemId !== "string") {
+        throw new Response("Item ID is required", { status: 400 });
+      }
 
-    await db
-      .update(groceryItems)
-      .set({ completed: !item.completed, updatedAt: new Date() })
-      .where(
-        and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
-      );
-  }
+      const deleted = await db
+        .delete(groceryItems)
+        .where(
+          and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
+        );
 
-  if (typeof itemId === "string" && intent === "delete") {
-    const deleted = await db
-      .delete(groceryItems)
-      .where(
-        and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
-      );
-
-    if (deleted.changes === 0) {
-      throw new Response("Not found", { status: 404 });
+      if (deleted.changes === 0) {
+        throw new Response("Not found", { status: 404 });
+      }
+      break;
     }
-  }
+    case "edit": {
+      if (typeof itemId !== "string") {
+        throw new Response("Item ID is required", { status: 400 });
+      }
 
-  if (typeof itemId === "string" && intent === "edit") {
-    const updated = await db
-      .update(groceryItems)
-      .set({ text: itemText(formData.get("text")), updatedAt: new Date() })
-      .where(
-        and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
-      );
+      const updated = await db
+        .update(groceryItems)
+        .set({ text: itemText(formData.get("text")), updatedAt: new Date() })
+        .where(
+          and(eq(groceryItems.id, itemId), eq(groceryItems.userId, user.id)),
+        );
 
-    if (updated.changes === 0) {
-      throw new Response("Not found", { status: 404 });
+      if (updated.changes === 0) {
+        throw new Response("Not found", { status: 404 });
+      }
+      break;
     }
+    default:
+      throw new Response("Invalid grocery action", { status: 400 });
   }
 
   return redirect("/");

@@ -10,6 +10,7 @@ export const auth = betterAuth({
     provider: "sqlite",
   }),
   emailAndPassword: {
+    disableSignUp: true,
     enabled: true,
   },
   plugins: [admin()],
