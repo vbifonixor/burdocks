@@ -4,7 +4,11 @@ import { AdminPage } from "./pages/admin-page";
 import { GroceryPage } from "./pages/grocery-page";
 import { SignInPage } from "./pages/sign-in-page";
 
-test("users manage only their own grocery items", async ({ app, page }) => {
+test("users manage only their own grocery items", async ({
+  app,
+  browser,
+  page,
+}) => {
   const signInPage = new SignInPage(page);
   const groceryPage = new GroceryPage(page);
   const adminPage = new AdminPage(page);
@@ -46,22 +50,35 @@ test("users manage only their own grocery items", async ({ app, page }) => {
     playerEmail,
     "playwright-player-password",
   );
-  await page.goto(app.url);
-  await groceryPage.signOut();
-
-  await signInPage.signIn(playerEmail, "playwright-player-password");
   await expect(
-    page.getByRole("heading", { name: "Grocery list" }),
-  ).toBeVisible();
-  await expect(groceryPage.item("Milk")).toHaveCount(0);
-  const deletionStatus = await page.evaluate(async (itemId) => {
-    const response = await fetch(`/api/grocery/${itemId}`, {
-      credentials: "include",
-      method: "DELETE",
-    });
-    return response.status;
-  }, milkId);
-  expect(deletionStatus).toBe(404);
-  await groceryPage.signOut();
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    page.getByRole("listitem").filter({ hasText: playerEmail }),
+  ).toHaveCount(1);
+
+  const playerContext = await browser.newContext();
+  const playerPage = await playerContext.newPage();
+  const playerSignInPage = new SignInPage(playerPage);
+  const playerGroceryPage = new GroceryPage(playerPage);
+
+  try {
+    await playerSignInPage.open(app.url);
+    await playerSignInPage.signIn(playerEmail, "playwright-player-password");
+    await expect(
+      playerPage.getByRole("heading", { name: "Grocery list" }),
+    ).toBeVisible();
+    await expect(playerGroceryPage.item("Milk")).toHaveCount(0);
+    const deletionStatus = await playerPage.evaluate(async (itemId) => {
+      const response = await fetch(`/api/grocery/${itemId}`, {
+        credentials: "include",
+        method: "DELETE",
+      });
+      return response.status;
+    }, milkId);
+    expect(deletionStatus).toBe(404);
+    await playerGroceryPage.signOut();
+    await expect(
+      playerPage.getByRole("heading", { name: "Sign in" }),
+    ).toBeVisible();
+  } finally {
+    await playerContext.close();
+  }
 });
