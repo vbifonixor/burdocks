@@ -27,16 +27,23 @@ safe changes without accumulating large, agent-written planning documents.
    - Update documentation only when a durable decision, operation, or
      architecture changes.
 
-4. **Review**
+4. **Pre-PR Review**
+   - Use the `code-review-and-quality` skill against the local branch diff.
    - Review tests first, then the complete diff.
    - Focus on correctness, authorization, data safety, regressions, and
      verification rather than style preferences.
    - Fix actionable findings on the same branch.
 
-5. **Verify And Release**
+5. **PR Review**
    - Run the relevant `mise` checks and manual UI checks.
-   - Open a pull request, wait for CI, then merge and deploy the immutable
-     image.
+   - Open a pull request and wait for CI.
+   - Use the `code-review-and-quality` skill again against the exact PR diff,
+     its checks, and its review comments.
+   - Fix actionable findings, push the branch, re-run affected verification,
+     and repeat PR review until no actionable findings remain.
+
+6. **Release**
+   - Merge the approved pull request and deploy the immutable image.
    - Health-check the deployment and record any follow-up work.
 
 ## Task Records
