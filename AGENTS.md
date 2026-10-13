@@ -1,6 +1,8 @@
 # Burdocks Agent Guide
 
-Read `docs/README.md` and the current task document before changing application behavior.
+Read `docs/README.md`, the current task document, and every `CONTEXT.md` that
+governs files you plan to change before changing application behavior. The
+closest applicable context takes precedence.
 
 Use Mise as the command interface:
 
